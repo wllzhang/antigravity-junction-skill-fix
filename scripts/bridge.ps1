@@ -290,48 +290,70 @@ function Invoke-SyncDirectory {
     $meta = Read-BridgeMeta -Path $DirectoryPath
     if (-not $meta) { return }
 
-    $resolvedTarget = $meta.resolvedTarget
-    if (-not (Test-Path -LiteralPath $resolvedTarget)) {
-        # Check if raw link target has moved or updated
-        $currentResolved = Resolve-TargetRecursive -Path $meta.linkTarget
-        if (Test-Path -LiteralPath $currentResolved) {
-            $resolvedTarget = $currentResolved
-            $meta.resolvedTarget = $resolvedTarget
-        } else {
-            Write-Log "Cannot sync '$DirectoryPath': Source '$resolvedTarget' no longer exists." 'Warn'
-            return
-        }
+    $targetToCheck = if ($meta.linkTarget) { $meta.linkTarget } else { $meta.resolvedTarget }
+    $currentResolved = Resolve-TargetRecursive -Path $targetToCheck
+
+    if (-not $currentResolved -or (-not (Test-Path -LiteralPath $currentResolved))) {
+        Write-Log "Cannot sync '$DirectoryPath': Source target '$currentResolved' no longer exists." 'Warn'
+        return
     }
 
-    $srcFiles = Get-ChildItem -LiteralPath $resolvedTarget -Recurse -File -Force
+    $targetChanged = ($currentResolved -ine $meta.resolvedTarget)
+    if ($targetChanged) {
+        Write-Log "Upstream target updated: '$($meta.resolvedTarget)' -> '$currentResolved'" 'Info'
+        $meta.resolvedTarget = $currentResolved
+    }
+
+    $srcFiles = Get-ChildItem -LiteralPath $currentResolved -Recurse -File -Force
     $destFiles = Get-ChildItem -LiteralPath $DirectoryPath -Recurse -File -Force | Where-Object { $_.Name -ne '.bridge_meta.json' }
 
     $srcRelMap = @{}
     foreach ($f in $srcFiles) {
-        $rel = $f.FullName.Substring($resolvedTarget.Length).TrimStart('\', '/')
+        $rel = $f.FullName.Substring($currentResolved.Length).TrimStart('\', '/')
         $srcRelMap[$rel] = $f
     }
 
-    # Remove deleted files
+    $destRelMap = @{}
     foreach ($df in $destFiles) {
         $rel = $df.FullName.Substring($DirectoryPath.Length).TrimStart('\', '/')
+        $destRelMap[$rel] = $df
+    }
+
+    # 1. Remove deleted files
+    foreach ($rel in $destRelMap.Keys) {
         if (-not $srcRelMap.ContainsKey($rel)) {
-            Remove-Item -LiteralPath $df.FullName -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $destRelMap[$rel].FullName -Force -ErrorAction SilentlyContinue
         }
     }
 
-    # Add or update missing files
+    # 2. Add new files or update modified files in Copy mode or when target changed
+    $hasUpdated = $targetChanged
     foreach ($rel in $srcRelMap.Keys) {
         $srcFile = $srcRelMap[$rel]
         $destFile = Join-Path $DirectoryPath $rel
-        if (-not (Test-Path -LiteralPath $destFile)) {
-            Create-HardLinkOrCopy -SourceFile $srcFile.FullName -DestFile $destFile | Out-Null
+
+        $needsUpdate = $false
+        if (-not $destRelMap.ContainsKey($rel)) {
+            $needsUpdate = $true
+        } elseif ($meta.bridgeMode -eq 'Copy' -or $targetChanged) {
+            $destFileItem = $destRelMap[$rel]
+            if ($srcFile.Length -ne $destFileItem.Length -or $srcFile.LastWriteTimeUtc -ne $destFileItem.LastWriteTimeUtc) {
+                $needsUpdate = $true
+            }
+        }
+
+        if ($needsUpdate) {
+            $res = Create-HardLinkOrCopy -SourceFile $srcFile.FullName -DestFile $destFile
+            if ($res -eq 'Copy') { $meta.bridgeMode = 'Copy' }
+            $hasUpdated = $true
         }
     }
 
     $meta.lastSyncAt = (Get-Date).ToString('o')
     Save-BridgeMeta -Path $DirectoryPath -Meta $meta
-    Write-Log "Bridge synced: $DirectoryPath" 'Info'
+    if ($hasUpdated) {
+        Write-Log "Bridge synced with updates: $DirectoryPath" 'Info'
+    }
 }
 
 function Invoke-RestoreDirectory {
