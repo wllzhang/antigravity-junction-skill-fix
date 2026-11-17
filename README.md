@@ -62,7 +62,7 @@ flowchart TD
 Clone the repository and run the installer:
 
 ```powershell
-git clone https://github.com/antigravity-community/antigravity-junction-skill-fix.git
+git clone https://github.com/wllzhang/antigravity-junction-skill-fix.git
 cd antigravity-junction-skill-fix
 pwsh -ExecutionPolicy Bypass -File .\install.ps1
 ```

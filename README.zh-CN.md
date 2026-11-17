@@ -64,7 +64,7 @@ flowchart TD
 克隆仓库并执行安装脚本：
 
 ```powershell
-git clone https://github.com/antigravity-community/antigravity-junction-skill-fix.git
+git clone https://github.com/wllzhang/antigravity-junction-skill-fix.git
 cd antigravity-junction-skill-fix
 pwsh -ExecutionPolicy Bypass -File .\install.ps1
 ```
