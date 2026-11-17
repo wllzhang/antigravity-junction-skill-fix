@@ -1,0 +1,26 @@
+name: CI - Windows Junction Bridge Tests
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  test-windows:
+    name: Run Test Suite (${{ matrix.shell }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [ pwsh, powershell ]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Test Suite
+        shell: ${{ matrix.shell }}
+        run: |
+          & ./tests/bridge.Tests.ps1

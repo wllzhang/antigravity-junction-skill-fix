@@ -1,0 +1,20 @@
+{
+  "name": "antigravity-junction-skill-fix",
+  "display_name": "Antigravity Windows Junction Skill Bridge",
+  "description": "Seamlessly bridges NTFS Directory Junctions and Symlinks into real hardlinked directories so Antigravity can discover skills on Windows.",
+  "version": "1.0.0",
+  "author": "Antigravity Community",
+  "homepage": "https://github.com/antigravity-community/antigravity-junction-skill-fix",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antigravity-community/antigravity-junction-skill-fix.git"
+  },
+  "keywords": [
+    "windows",
+    "junction",
+    "symlink",
+    "skills",
+    "hooks",
+    "antigravity"
+  ]
+}

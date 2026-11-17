@@ -1,0 +1,21 @@
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Test & Temporary outputs
+tests/temp_*
+*.log
+*.tmp
+
+# Bridge backup / local temp files
+.bridge_backup/
+.bridge_meta.json.bak
+
+# IDE & Editor folders
+.vscode/
+.idea/
+*.swp
+*~

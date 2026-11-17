@@ -1,0 +1,12 @@
+{
+  "antigravity-junction-skill-fix": {
+    "enabled": true,
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "cmd.exe /c scripts\\run-bridge.cmd",
+        "timeout": 15
+      }
+    ]
+  }
+}
