@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6.svg?logo=windows)](https://www.microsoft.com/windows)
 [![Antigravity Plugin](https://img.shields.io/badge/Antigravity-Plugin-brightgreen.svg)](https://antigravity.google)
+[![Awesome Antigravity Tools](https://img.shields.io/badge/Awesome-Antigravity--Tools-brightgreen?logo=google&logoColor=white)](https://github.com/wllzhang/awesome-antigravity-tools)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207%2B-5391FE.svg?logo=powershell)](https://github.com/PowerShell/PowerShell)
 
 **antigravity-junction-skill-fix** is an open-source Antigravity plugin and standalone utility that solves the issue where Antigravity cannot discover skills mounted via Windows directory links (NTFS Junctions `mklink /J` or Directory Symlinks `mklink /D`).

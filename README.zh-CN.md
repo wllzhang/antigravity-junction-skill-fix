@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6.svg?logo=windows)](https://www.microsoft.com/windows)
 [![Antigravity Plugin](https://img.shields.io/badge/Antigravity-Plugin-brightgreen.svg)](https://antigravity.google)
+[![Awesome Antigravity Tools](https://img.shields.io/badge/Awesome-Antigravity--Tools-brightgreen?logo=google&logoColor=white)](https://github.com/wllzhang/awesome-antigravity-tools)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207%2B-5391FE.svg?logo=powershell)](https://github.com/PowerShell/PowerShell)
 
 **antigravity-junction-skill-fix** 是一套开源的 Antigravity 插件与独立命令行工具，专为解决 Antigravity 在 Windows 下**无法识别通过目录联接（NTFS Junction `mklink /J`）或目录符号链接（Symlink `mklink /D`）挂载的 Skills** 这一硬伤问题而设计。
