@@ -51,7 +51,7 @@ $scriptsDest = Join-Path $installDest 'scripts'
 if (-not (Test-Path -LiteralPath $scriptsDest)) {
     New-Item -ItemType Directory -Path $scriptsDest -Force | Out-Null
 }
-Copy-Item -LiteralPath (Join-Path $scriptsSrc '*') -Destination $scriptsDest -Recurse -Force
+Copy-Item -Path (Join-Path $scriptsSrc '*') -Destination $scriptsDest -Recurse -Force
 
 Write-Host "Plugin files deployed successfully." -ForegroundColor Green
 
