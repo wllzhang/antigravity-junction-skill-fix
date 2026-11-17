@@ -20,7 +20,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run Test Suite
-        shell: ${{ matrix.shell }}
+      - name: Run Test Suite (PowerShell Core)
+        if: matrix.shell == 'pwsh'
+        shell: pwsh
+        run: |
+          & ./tests/bridge.Tests.ps1
+
+      - name: Run Test Suite (Windows PowerShell 5.1)
+        if: matrix.shell == 'powershell'
+        shell: powershell
         run: |
           & ./tests/bridge.Tests.ps1
