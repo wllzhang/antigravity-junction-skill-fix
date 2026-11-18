@@ -29,25 +29,11 @@ Antigravity 的核心文件发现与调度引擎是基于 Go 语言编译的本�
 本工具通过检测技能目录（全局 `~/.gemini/config/skills/` 以及工作区目录），将所有目录链接透明重构为**实体文件夹（`d----`）**，内部文件直接使用 **NTFS 文件硬链接（Hardlink）** 映射回原始物理目录：
 
 ```mermaid
-flowchart TD
-    subgraph engine ["Antigravity 运行触发"]
-        A["SessionStart 钩子 (hooks.json)"] --> B["scripts/run-bridge.cmd"]
-        B --> C["scripts/bridge.ps1"]
-    end
-
-    subgraph bridge ["桥接核心引擎"]
-        D{"检测重解析点"} -->|"Junction / Symlink"| E["递归解析多层物理真实目标"]
-        E --> F["将链接替换为实体文件夹"]
-        F --> G["建立底层文件 NTFS 硬链接"]
-        G --> H["持久化元数据 (.bridge_meta.json)"]
-    end
-
-    subgraph discovery ["技能正常发现"]
-        I["Antigravity 扫描到真实目录"] -->|"成功识别 SKILL.md"| J["技能成功激活并可用"]
-    end
-
-    C --> D
-    H --> I
+flowchart LR
+    A["SessionStart 钩子"] --> B{"检测目录链接?"}
+    B -->|"是"| C["解析物理目标"]
+    C --> D["实体目录 + NTFS 硬链接"]
+    D --> E["Antigravity 识别 SKILL.md"]
 ```
 
 ### 核心技术优势：

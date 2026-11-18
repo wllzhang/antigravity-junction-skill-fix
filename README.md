@@ -27,25 +27,11 @@ Antigravity's core engine uses a Go-based Language Server (`language_server_wind
 This project automatically detects directory junctions and symlinks across your global (`~/.gemini/config/skills/`) and workspace skill folders, transforming them into **real directories (`d----`)** containing **NTFS Hardlinks**:
 
 ```mermaid
-flowchart TD
-    subgraph engine ["Antigravity Engine"]
-        A["SessionStart Hook (hooks.json)"] --> B["scripts/run-bridge.cmd"]
-        B --> C["scripts/bridge.ps1"]
-    end
-
-    subgraph bridge ["Bridge Engine"]
-        D{"Detect ReparsePoint"} -->|"Junction / Symlink"| E["Resolve Multi-Hop Physical Target"]
-        E --> F["Replace Link with Real Directory"]
-        F --> G["Replicate Files via NTFS Hardlinks"]
-        G --> H["Save Metadata (.bridge_meta.json)"]
-    end
-
-    subgraph discovery ["Antigravity Skill Discovery"]
-        I["Antigravity Language Server Scans Directory"] -->|"Recognized as Real Directory"| J["Skill Loaded Successfully"]
-    end
-
-    C --> D
-    H --> I
+flowchart LR
+    A["SessionStart Hook"] --> B{"Junction / Symlink?"}
+    B -->|"Yes"| C["Resolve Target"]
+    C --> D["Real Dir + NTFS Hardlinks"]
+    D --> E["Antigravity Loads SKILL.md"]
 ```
 
 ### Key Advantages:
