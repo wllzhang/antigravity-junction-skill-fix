@@ -30,23 +30,24 @@ Antigravity 的核心文件发现与调度引擎是基于 Go 语言编译的本�
 
 ```mermaid
 flowchart TD
-    subgraph Antigravity 运行触发
+    subgraph engine ["Antigravity 运行触发"]
         A["SessionStart 钩子 (hooks.json)"] --> B["scripts/run-bridge.cmd"]
         B --> C["scripts/bridge.ps1"]
     end
 
-    subgraph 桥接核心引擎
-        C --> D{"检测重解析点"}
-        D -->|"Junction / Symlink"| E["递归解析多层物理真实目标"]
-        E --> F["将链接替换为实体文件夹 (d----)"]
+    subgraph bridge ["桥接核心引擎"]
+        D{"检测重解析点"} -->|"Junction / Symlink"| E["递归解析多层物理真实目标"]
+        E --> F["将链接替换为实体文件夹"]
         F --> G["建立底层文件 NTFS 硬链接"]
         G --> H["持久化元数据 (.bridge_meta.json)"]
     end
 
-    subgraph 技能正常发现
-        H --> I["Antigravity 扫描到真实目录"]
-        I -->|"成功识别 SKILL.md"| J["技能成功激活并可用！🎉"]
+    subgraph discovery ["技能正常发现"]
+        I["Antigravity 扫描到真实目录"] -->|"成功识别 SKILL.md"| J["技能成功激活并可用"]
     end
+
+    C --> D
+    H --> I
 ```
 
 ### 核心技术优势：

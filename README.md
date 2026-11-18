@@ -28,23 +28,24 @@ This project automatically detects directory junctions and symlinks across your 
 
 ```mermaid
 flowchart TD
-    subgraph Antigravity Engine
+    subgraph engine ["Antigravity Engine"]
         A["SessionStart Hook (hooks.json)"] --> B["scripts/run-bridge.cmd"]
         B --> C["scripts/bridge.ps1"]
     end
 
-    subgraph Bridge Engine
-        C --> D{"Detect ReparsePoint"}
-        D -->|"Junction / Symlink"| E["Resolve Multi-Hop Physical Target"]
-        E --> F["Replace Link with Real Directory (d----)"]
+    subgraph bridge ["Bridge Engine"]
+        D{"Detect ReparsePoint"} -->|"Junction / Symlink"| E["Resolve Multi-Hop Physical Target"]
+        E --> F["Replace Link with Real Directory"]
         F --> G["Replicate Files via NTFS Hardlinks"]
         G --> H["Save Metadata (.bridge_meta.json)"]
     end
 
-    subgraph Antigravity Skill Discovery
-        H --> I["Antigravity Language Server Scans Directory"]
-        I -->|"Recognized as Real Directory"| J["Skill Loaded Successfully! 🎉"]
+    subgraph discovery ["Antigravity Skill Discovery"]
+        I["Antigravity Language Server Scans Directory"] -->|"Recognized as Real Directory"| J["Skill Loaded Successfully"]
     end
+
+    C --> D
+    H --> I
 ```
 
 ### Key Advantages:
