@@ -217,7 +217,10 @@ function Create-HardLinkOrCopy {
 # ------------------------------------------------------------------------------
 
 function Invoke-BridgeDirectory {
-    param([string]$DirectoryPath)
+    param(
+        [string]$DirectoryPath,
+        [switch]$ForceBridge
+    )
 
     if (-not (Test-Path -LiteralPath $DirectoryPath)) { return }
 
@@ -228,23 +231,51 @@ function Invoke-BridgeDirectory {
         return # Regular directory, nothing to do
     }
 
-    if ($isBridged) {
+    if ($isBridged -and -not $ForceBridge) {
         Invoke-SyncDirectory -DirectoryPath $DirectoryPath
         return
     }
 
-    # Extract link information
-    $linkInfo = Get-LinkTypeAndRawTarget -Path $DirectoryPath
-    $rawTarget = $linkInfo.RawTarget
-    $linkType = $linkInfo.LinkType
-    $resolvedTarget = Resolve-TargetRecursive -Path $DirectoryPath
+    if ($isBridged -and $ForceBridge) {
+        $existingMeta = Read-BridgeMeta -Path $DirectoryPath
+        if (-not $existingMeta) { return }
+        $rawTarget = $existingMeta.linkTarget
+        $linkType = $existingMeta.originalType
+        $targetToCheck = if ($rawTarget) { $rawTarget } else { $existingMeta.resolvedTarget }
+        $resolvedTarget = Resolve-TargetRecursive -Path $targetToCheck
 
-    if (-not $resolvedTarget -or (-not (Test-Path -LiteralPath $resolvedTarget))) {
-        Write-Log "Cannot bridge '$DirectoryPath': Target '$resolvedTarget' does not exist." 'Warn'
-        return
+        if (-not $resolvedTarget -or (-not (Test-Path -LiteralPath $resolvedTarget))) {
+            Write-Log "Cannot force re-bridge '$DirectoryPath': Target '$resolvedTarget' does not exist." 'Warn'
+            return
+        }
+
+        Write-Log "Force re-bridging: $DirectoryPath -> $resolvedTarget (Type: $linkType)" 'Info'
+        Get-ChildItem -LiteralPath $DirectoryPath -Force | Remove-Item -Recurse -Force -ErrorAction Stop
+    } else {
+        # Extract link information from raw reparse point
+        $linkInfo = Get-LinkTypeAndRawTarget -Path $DirectoryPath
+        $rawTarget = $linkInfo.RawTarget
+        $linkType = $linkInfo.LinkType
+        $resolvedTarget = Resolve-TargetRecursive -Path $DirectoryPath
+
+        if (-not $resolvedTarget -or (-not (Test-Path -LiteralPath $resolvedTarget))) {
+            Write-Log "Cannot bridge '$DirectoryPath': Target '$resolvedTarget' does not exist." 'Warn'
+            return
+        }
+
+        Write-Log "Bridging: $DirectoryPath -> $resolvedTarget (Type: $linkType)" 'Info'
+
+        # Safely remove the junction/symlink reparse point (leaving target directory untouched)
+        cmd /c "rmdir `"$DirectoryPath`"" 2>&1 | Out-Null
+
+        if (Test-Path -LiteralPath $DirectoryPath) {
+            Write-Log "Failed to unmount junction at $DirectoryPath" 'Error'
+            return
+        }
+
+        # Create real directory
+        New-Item -ItemType Directory -Path $DirectoryPath -Force | Out-Null
     }
-
-    Write-Log "Bridging: $DirectoryPath -> $resolvedTarget (Type: $linkType)" 'Info'
 
     # Prepare metadata
     $meta = @{
@@ -256,18 +287,6 @@ function Invoke-BridgeDirectory {
         lastSyncAt = (Get-Date).ToString('o')
         bridgeMode = 'Pending'
     }
-
-    # Safely remove the junction/symlink reparse point (leaving target directory untouched)
-    # Using cmd /c rmdir on Windows deletes only the reparse point link
-    cmd /c "rmdir `"$DirectoryPath`"" 2>&1 | Out-Null
-
-    if (Test-Path -LiteralPath $DirectoryPath) {
-        Write-Log "Failed to unmount junction at $DirectoryPath" 'Error'
-        return
-    }
-
-    # Create real directory
-    New-Item -ItemType Directory -Path $DirectoryPath -Force | Out-Null
 
     # Mirror files
     $modeUsed = 'HardLink'
@@ -319,15 +338,30 @@ function Invoke-SyncDirectory {
         $destRelMap[$rel] = $df
     }
 
-    # 1. Remove deleted files
+    # 1. Remove deleted files and orphaned empty subdirectories
+    $hasUpdated = $targetChanged
     foreach ($rel in $destRelMap.Keys) {
         if (-not $srcRelMap.ContainsKey($rel)) {
             Remove-Item -LiteralPath $destRelMap[$rel].FullName -Force -ErrorAction SilentlyContinue
+            $hasUpdated = $true
+        }
+    }
+
+    $destDirs = @(Get-ChildItem -LiteralPath $DirectoryPath -Recurse -Directory -Force -ErrorAction SilentlyContinue |
+        Sort-Object { $_.FullName.Length } -Descending)
+    foreach ($dd in $destDirs) {
+        $relDir = $dd.FullName.Substring($DirectoryPath.Length).TrimStart('\', '/')
+        $srcDir = Join-Path $currentResolved $relDir
+        if (-not (Test-Path -LiteralPath $srcDir)) {
+            $remaining = @(Get-ChildItem -LiteralPath $dd.FullName -Force -ErrorAction SilentlyContinue)
+            if ($remaining.Count -eq 0) {
+                Remove-Item -LiteralPath $dd.FullName -Force -ErrorAction SilentlyContinue
+                $hasUpdated = $true
+            }
         }
     }
 
     # 2. Add new files or update modified files in Copy mode or when target changed
-    $hasUpdated = $targetChanged
     foreach ($rel in $srcRelMap.Keys) {
         $srcFile = $srcRelMap[$rel]
         $destFile = Join-Path $DirectoryPath $rel
@@ -480,8 +514,10 @@ foreach ($parentDir in $searchDirs) {
                 })
             }
         } elseif ($Action -eq 'Bridge') {
-            if ($isReparse -or ($isBridged -and $Force)) {
+            if ($isReparse) {
                 Invoke-BridgeDirectory -DirectoryPath $itemPath
+            } elseif ($isBridged -and $Force) {
+                Invoke-BridgeDirectory -DirectoryPath $itemPath -ForceBridge
             } elseif ($isBridged) {
                 Invoke-SyncDirectory -DirectoryPath $itemPath
             }

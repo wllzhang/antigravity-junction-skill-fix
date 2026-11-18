@@ -3,11 +3,14 @@
     Uninstalls antigravity-junction-skill-fix and restores all bridged directories.
 
 .DESCRIPTION
-    Rolls back bridged directories back to original NTFS Junctions and removes plugin files.
+    Rolls back bridged directories back to original NTFS Junctions and removes plugin files
+    from global (~/.gemini/config/plugins), workspace (.agents/plugins), or custom target directory.
 #>
 
 [CmdletBinding()]
 param(
+    [switch]$Workspace,
+    [string]$CustomTargetDir,
     [switch]$KeepBridges
 )
 
@@ -26,9 +29,20 @@ if (-not $KeepBridges -and (Test-Path -LiteralPath $bridgeScript)) {
 }
 
 $userHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
-$pluginDir = Join-Path $userHome ".gemini\config\plugins\antigravity-junction-skill-fix"
+$pluginDir = if ($CustomTargetDir) {
+    $CustomTargetDir
+} elseif ($Workspace) {
+    Join-Path (Get-Location) ".agents\plugins\antigravity-junction-skill-fix"
+} else {
+    Join-Path $userHome ".gemini\config\plugins\antigravity-junction-skill-fix"
+}
 
 if (Test-Path -LiteralPath $pluginDir) {
+    $resolvedPluginDir = (Resolve-Path -LiteralPath $pluginDir).Path.TrimEnd('\')
+    $currentCwd = (Get-Location).Path.TrimEnd('\')
+    if ($currentCwd.StartsWith($resolvedPluginDir, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Set-Location -LiteralPath $userHome
+    }
     Write-Host "Removing installed plugin from: $pluginDir" -ForegroundColor Cyan
     Remove-Item -LiteralPath $pluginDir -Recurse -Force
 }

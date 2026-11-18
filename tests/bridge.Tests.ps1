@@ -117,6 +117,24 @@ try {
     & $bridgeScript -Action Sync -TargetDir $mockSkillsDir
     Assert-Test -Name "New file bridged after Sync" -Condition (Test-Path -LiteralPath (Join-Path $junctionSkill "extra_file.txt"))
 
+    # Nested directory pruning & Force re-bridge tests
+    $nestedSrcDir = Join-Path $realAppDir "sub\deep"
+    New-Item -ItemType Directory -Path $nestedSrcDir -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $nestedSrcDir "nested.txt") -Value "nested" -Encoding UTF8
+    & $bridgeScript -Action Sync -TargetDir $mockSkillsDir
+    Assert-Test -Name "Nested directory synced into bridge" -Condition (Test-Path -LiteralPath (Join-Path $junctionSkill "sub\deep\nested.txt"))
+
+    Remove-Item -LiteralPath (Join-Path $realAppDir "sub") -Recurse -Force
+    & $bridgeScript -Action Sync -TargetDir $mockSkillsDir
+    Assert-Test -Name "Deleted nested directory pruned cleanly on Sync" -Condition (-not (Test-Path -LiteralPath (Join-Path $junctionSkill "sub")))
+
+    # Sever hardlink in bridge and replace with stale standalone file, then test -Force rebuild
+    Remove-Item -LiteralPath (Join-Path $junctionSkill "SKILL.md") -Force
+    Set-Content -LiteralPath (Join-Path $junctionSkill "SKILL.md") -Value "corrupted-standalone" -Encoding UTF8
+    & $bridgeScript -Action Bridge -TargetDir $mockSkillsDir -Force
+    $rebuiltContent = (Get-Content -LiteralPath (Join-Path $junctionSkill "SKILL.md") -Raw).Trim()
+    Assert-Test -Name "Bridge -Force rebuilds severed/corrupted bridge files from upstream" -Condition ($rebuiltContent -eq $newContent)
+
     # --------------------------------------------------------------------------
     # Test Group 5: Restore (Reversibility)
     # --------------------------------------------------------------------------
