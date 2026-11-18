@@ -28,10 +28,9 @@ This project automatically detects directory junctions and symlinks across your 
 
 ```mermaid
 flowchart LR
-    A["SessionStart Hook"] --> B{"Junction / Symlink?"}
-    B -->|"Yes"| C["Resolve Target"]
-    C --> D["Real Dir + NTFS Hardlinks"]
-    D --> E["Antigravity Loads SKILL.md"]
+    A["SessionStart Hook"] --> B["Detect Junction / Symlink"]
+    B --> C["Real Dir + NTFS Hardlinks"]
+    C --> D["SKILL.md Loaded"]
 ```
 
 ### Key Advantages:

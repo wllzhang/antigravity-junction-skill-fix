@@ -30,10 +30,9 @@ Antigravity 的核心文件发现与调度引擎是基于 Go 语言编译的本�
 
 ```mermaid
 flowchart LR
-    A["SessionStart 钩子"] --> B{"检测目录链接?"}
-    B -->|"是"| C["解析物理目标"]
-    C --> D["实体目录 + NTFS 硬链接"]
-    D --> E["Antigravity 识别 SKILL.md"]
+    A["SessionStart 钩子"] --> B["检测 Junction / Symlink"]
+    B --> C["实体目录 + NTFS 硬链接"]
+    C --> D["成功识别 SKILL.md"]
 ```
 
 ### 核心技术优势：
