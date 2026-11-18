@@ -1,20 +1,18 @@
 {
   "name": "antigravity-junction-skill-fix",
-  "display_name": "Antigravity Windows Junction Skill Bridge",
-  "description": "Seamlessly bridges NTFS Directory Junctions and Symlinks into real hardlinked directories so Antigravity can discover skills on Windows.",
-  "version": "1.0.0",
-  "author": "Antigravity Community",
-  "homepage": "https://github.com/wllzhang/antigravity-junction-skill-fix",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wllzhang/antigravity-junction-skill-fix.git"
+  "displayName": "Antigravity Windows Junction Skill Bridge",
+  "description": "Zero-copy NTFS hardlink directory bridge that resolves Go language server skill discovery failures for Windows directory junctions and symlinks.",
+  "logo": "assets/logo.svg",
+  "version": "1.0.1",
+  "author": {
+    "name": "wllzhang",
+    "url": "https://github.com/wllzhang"
   },
-  "keywords": [
-    "windows",
-    "junction",
-    "symlink",
-    "skills",
-    "hooks",
-    "antigravity"
+  "homepage": "https://github.com/wllzhang/antigravity-junction-skill-fix",
+  "repository": "https://github.com/wllzhang/antigravity-junction-skill-fix",
+  "suggestedPrompts": [
+    "Scan my global and workspace skill folders for unbridged Windows junctions",
+    "Check the status of bridged NTFS hardlink skills in Antigravity",
+    "Sync newly added files across bridged Windows skill directories"
   ]
 }

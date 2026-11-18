@@ -45,6 +45,16 @@ foreach ($f in $filesToCopy) {
     }
 }
 
+# Copy assets directory if present
+$assetsSrc = Join-Path $scriptRoot 'assets'
+if (Test-Path -LiteralPath $assetsSrc) {
+    $assetsDest = Join-Path $installDest 'assets'
+    if (-not (Test-Path -LiteralPath $assetsDest)) {
+        New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null
+    }
+    Copy-Item -Path (Join-Path $assetsSrc '*') -Destination $assetsDest -Recurse -Force
+}
+
 # Copy scripts directory
 $scriptsSrc = Join-Path $scriptRoot 'scripts'
 $scriptsDest = Join-Path $installDest 'scripts'
